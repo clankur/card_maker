@@ -1,7 +1,7 @@
 import csv
+import os
 from PIL import Image, ImageDraw, ImageFont, ImageColor
 import textwrap
-import os
 
 COLORS = {
     "background": "#0d1b2a",
@@ -16,12 +16,10 @@ COLORS = {
     "grid_background": "white",
 }
 
-# Page dimensions setting set for standard US letter page
-# with printer of 300 dpi
-PAGE_WIDTH, PAGE_HEIGHT = 2550, 3300
+PAGE_WIDTH, PAGE_HEIGHT = 2550, 3300  # US letter page at 300 dpi
+CARD_WIDTH, CARD_HEIGHT = PAGE_WIDTH // 3, PAGE_HEIGHT // 3
 
-CARD_WIDTH = PAGE_WIDTH // 3
-CARD_HEIGHT = PAGE_HEIGHT // 3
+COLORS["background"] = (*ImageColor.getrgb(COLORS["background"]), 128)  # 50% opacity
 
 
 def get_font(size):
@@ -39,86 +37,10 @@ def get_font(size):
     return ImageFont.load_default()
 
 
-def draw_rounded_rectangle(draw, xy, corner_radius, fill=None, outline=None):
-    upper_left_point = xy[0]
-    bottom_right_point = xy[1]
-
-    draw.rectangle(
-        [
-            (upper_left_point[0], upper_left_point[1] + corner_radius),
-            (bottom_right_point[0], bottom_right_point[1] - corner_radius),
-        ],
-        fill=fill,
-        outline=outline,
-    )
-    draw.rectangle(
-        [
-            (upper_left_point[0] + corner_radius, upper_left_point[1]),
-            (bottom_right_point[0] - corner_radius, bottom_right_point[1]),
-        ],
-        fill=fill,
-        outline=outline,
-    )
-    draw.pieslice(
-        [
-            upper_left_point,
-            (
-                upper_left_point[0] + corner_radius * 2,
-                upper_left_point[1] + corner_radius * 2,
-            ),
-        ],
-        180,
-        270,
-        fill=fill,
-        outline=outline,
-    )
-    draw.pieslice(
-        [
-            (
-                bottom_right_point[0] - corner_radius * 2,
-                bottom_right_point[1] - corner_radius * 2,
-            ),
-            bottom_right_point,
-        ],
-        0,
-        90,
-        fill=fill,
-        outline=outline,
-    )
-    draw.pieslice(
-        [
-            (upper_left_point[0], bottom_right_point[1] - corner_radius * 2),
-            (upper_left_point[0] + corner_radius * 2, bottom_right_point[1]),
-        ],
-        90,
-        180,
-        fill=fill,
-        outline=outline,
-    )
-    draw.pieslice(
-        [
-            (bottom_right_point[0] - corner_radius * 2, upper_left_point[1]),
-            (bottom_right_point[0], upper_left_point[1] + corner_radius * 2),
-        ],
-        270,
-        360,
-        fill=fill,
-        outline=outline,
-    )
-
-
-COLORS["background"] = (
-    *ImageColor.getrgb(COLORS["background"]),
-    128,
-)  # 128 for 50% opacity
-
-
 def create_card(title, cost, type, ability, atk, image_path):
-    # Create a transparent base for the card
     card = Image.new("RGBA", (CARD_WIDTH, CARD_HEIGHT), (0, 0, 0, 0))
     draw = ImageDraw.Draw(card)
 
-    # Load and resize the background image
     if os.path.exists(image_path):
         bg_image = Image.open(image_path).convert("RGBA")
         bg_image = resize_and_crop(bg_image, (CARD_WIDTH, CARD_HEIGHT))
@@ -135,31 +57,23 @@ def create_card(title, cost, type, ability, atk, image_path):
             anchor="mm",
         )
 
-    # Create a semi-transparent overlay
     overlay = Image.new("RGBA", (CARD_WIDTH, CARD_HEIGHT), COLORS["background"])
-
-    # Composite the background image and overlay
     card = Image.alpha_composite(bg_image, overlay)
     draw = ImageDraw.Draw(card)
 
-    # Calculate border and title area dimensions
     border_width = max(1, int(CARD_WIDTH * 0.007))
     title_area_height = int(CARD_HEIGHT * 0.125)
     corner_radius = int(CARD_HEIGHT * 0.025)
 
-    # Draw the title area separator
     draw.line(
         [(0, title_area_height), (CARD_WIDTH, title_area_height)],
         fill=COLORS["border"],
         width=border_width,
     )
-
-    # Draw rounded corners
     draw_rounded_corners(
         draw, CARD_WIDTH, CARD_HEIGHT, corner_radius, COLORS["border"], border_width
     )
 
-    # Draw title
     title_font = get_font(int(CARD_HEIGHT * 0.06))
     draw.text(
         (CARD_WIDTH // 2, title_area_height // 2),
@@ -169,7 +83,6 @@ def create_card(title, cost, type, ability, atk, image_path):
         anchor="mm",
     )
 
-    # Draw cost
     cost_font = get_font(int(CARD_HEIGHT * 0.07))
     cost_x = CARD_WIDTH - int(CARD_WIDTH * 0.05)
     cost_y = title_area_height // 2
@@ -177,7 +90,6 @@ def create_card(title, cost, type, ability, atk, image_path):
         (cost_x, cost_y), str(cost), font=cost_font, fill=COLORS["cost"], anchor="rm"
     )
 
-    # Draw type
     type_font = get_font(int(CARD_HEIGHT * 0.045))
     type_y = title_area_height + int(CARD_HEIGHT * 0.5)
     draw.text(
@@ -188,17 +100,13 @@ def create_card(title, cost, type, ability, atk, image_path):
         anchor="mm",
     )
 
-    # Draw ability
     ability_font = get_font(int(CARD_HEIGHT * 0.04))
-    ability_x = int(CARD_WIDTH * 0.05)
-    ability_y = type_y + int(CARD_HEIGHT * 0.06)
+    ability_y = title_area_height + int(CARD_HEIGHT * 0.56)
     ability_width = int(CARD_WIDTH * 0.9)
-
     avg_char_width = ability_font.getbbox("x")[2] - ability_font.getbbox("x")[0]
     wrapped_ability = textwrap.fill(
         ability, width=int(ability_width / avg_char_width * 1.5)
     )
-
     draw.multiline_text(
         (CARD_WIDTH // 2, ability_y),
         wrapped_ability,
@@ -209,43 +117,34 @@ def create_card(title, cost, type, ability, atk, image_path):
         spacing=int(CARD_HEIGHT * 0.01),
     )
 
-    # Draw attack
     atk_font = get_font(int(CARD_HEIGHT * 0.06))
     atk_x = int(CARD_WIDTH * 0.05)
     atk_y = CARD_HEIGHT - int(CARD_HEIGHT * 0.08)
-    atk_text = f"{atk}"
-
-    # Draw ATK text with outline
-    outline_color = COLORS["stat_border"]
     for offset in [(1, 1), (-1, 1), (1, -1), (-1, -1)]:
         draw.text(
             (atk_x + offset[0], atk_y + offset[1]),
-            atk_text,
+            str(atk),
             font=atk_font,
-            fill=outline_color,
+            fill=COLORS["stat_border"],
         )
-    draw.text((atk_x, atk_y), atk_text, font=atk_font, fill=COLORS["stat_fill"])
+    draw.text((atk_x, atk_y), str(atk), font=atk_font, fill=COLORS["stat_fill"])
 
     return card
 
 
 def resize_and_crop(image, target_size):
-    # Calculate the aspect ratios
     aspect_ratio_target = target_size[0] / target_size[1]
     aspect_ratio_image = image.width / image.height
 
     if aspect_ratio_image > aspect_ratio_target:
-        # Image is wider, crop the sides
         new_width = int(image.height * aspect_ratio_target)
         left = (image.width - new_width) // 2
         image = image.crop((left, 0, left + new_width, image.height))
     else:
-        # Image is taller, crop the top and bottom
         new_height = int(image.width / aspect_ratio_target)
         top = (image.height - new_height) // 2
         image = image.crop((0, top, image.width, top + new_height))
 
-    # Resize the cropped image to the target size
     return image.resize(target_size, Image.LANCZOS)
 
 
@@ -302,7 +201,6 @@ def process_csv(csv_file):
             )
             for row in reader
         ]
-
     return [create_grid(cards[i : i + 9]) for i in range(0, len(cards), 9)]
 
 
