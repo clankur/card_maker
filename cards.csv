@@ -1,4 +1,10 @@
 title,cost,ability,atk,type,image_path
 Volley,X,"Does +1 damage per attack played, -1 energy cost for all attacks",X,Supply,images/volley.png
-Blast,1,Does 1 damage,1 ,Starter,images/blast.png
+Blast,1,Does 1 damage,1,Starter,images/blast.png
 Charged blast,X,Does + 1 damage per extra energy used in blast,1+X,Supply,images/charge.png
+Screen,1,"Blocks two damage first turn. Blocks 1 second turn (shown by being ""tapped / sideways"") and discarded afterwards",1,Starter,images/screen.png
+Bandage,2,"Can either 1) Recover from wounded. Reveal the top card of the deck: If it's a ""paralyzed / dazed"", remove it.",1,Supply,images/bandage.png
+Channel,1,Generate 1 Mana,-,Starter,images/channel.png
+Channel,1,Generate 1 Mana,-,Starter,images/channel.png
+Channel,1,Generate 1 Mana,-,Starter,images/channel.png
+Channel,1,Generate 1 Mana,-,Starter,images/channel.png
