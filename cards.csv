@@ -1,0 +1,4 @@
+title,cost,ability,atk,type,image_path
+Volley,X,"Does +1 damage per attack played, -1 energy cost for all attacks",X,Supply,images/volley.png
+Blast,1,Does 1 damage,1 ,Starter,images/blast.png
+Charged blast,X,Does + 1 damage per extra energy used in blast,1+X,Supply,images/charge.png
