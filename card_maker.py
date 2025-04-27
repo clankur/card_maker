@@ -87,6 +87,25 @@ def create_card(title, cost, type, ability, atk, image_path):
         outline=COLORS["border"],
         width=border_width,
     )
+
+    title_font = get_font(int(CARD_SIZE[1] * 0.06))
+    title_bbox = title_font.getbbox(title)
+    title_width = title_bbox[2] - title_bbox[0]
+    title_height = title_bbox[3] - title_bbox[1]
+    title_padding = int(CARD_SIZE[1] * 0.02)  # Padding around the title text
+
+    draw.rounded_rectangle(
+        [
+            CARD_SIZE[0] // 2 - title_width // 2 - title_padding,
+            title_area_height // 2 - title_height // 2 - title_padding,
+            CARD_SIZE[0] // 2 + title_width // 2 + title_padding,
+            title_area_height // 2 + title_height // 2 + title_padding,
+        ],
+        fill=(*ImageColor.getrgb("#0d1b2a"), 128),
+        radius=int(CARD_SIZE[1] * 0.015),
+        outline=COLORS["border"],
+        width=border_width,
+    )
     draw.line(
         [(0, title_area_height), (CARD_SIZE[0], title_area_height)],
         fill=COLORS["border"],
@@ -107,13 +126,6 @@ def create_card(title, cost, type, ability, atk, image_path):
         fill=COLORS["cost"],
         anchor="rm",
     )
-    draw.text(
-        (CARD_SIZE[0] // 2, title_area_height + int(CARD_SIZE[1] * 0.5)),
-        type,
-        font=get_font(int(CARD_SIZE[1] * 0.045)),
-        fill=COLORS["type"],
-        anchor="mm",
-    )
 
     ability_font = get_font(int(CARD_SIZE[1] * 0.04))
     wrapped_ability = textwrap.fill(
@@ -124,6 +136,40 @@ def create_card(title, cost, type, ability, atk, image_path):
             / (ability_font.getbbox("x")[2] - ability_font.getbbox("x")[0])
             * 1.5
         ),
+    )
+    ability_bbox = ability_font.getbbox(wrapped_ability)
+    ability_width = ability_bbox[2] - ability_bbox[0]
+    ability_height = ability_bbox[3] - ability_bbox[1]
+    ability_padding = int(CARD_SIZE[1] * 0.02)  # Padding around the ability text
+
+    ability_rect = [
+        CARD_SIZE[0] // 24 - ability_padding,
+        title_area_height
+        + int(CARD_SIZE[1] * 0.5)
+        - ability_height // 2
+        - ability_padding,
+        CARD_SIZE[0] // 24 * 23 + ability_padding,
+        title_area_height
+        + int(CARD_SIZE[1] * 0.75)
+        + ability_height // 2
+        + ability_padding,
+    ]
+
+    translucent_color = ImageColor.getrgb("#0d1b2a") + (128,)
+
+    draw.rounded_rectangle(
+        ability_rect,
+        radius=int(CARD_SIZE[1] * 0.015),
+        fill=translucent_color,
+        outline=COLORS["border"],
+        width=border_width,
+    )
+    draw.text(
+        (CARD_SIZE[0] // 2, title_area_height + int(CARD_SIZE[1] * 0.5)),
+        type,
+        font=get_font(int(CARD_SIZE[1] * 0.045)),
+        fill=COLORS["type"],
+        anchor="mm",
     )
     draw.multiline_text(
         (CARD_SIZE[0] // 2, title_area_height + int(CARD_SIZE[1] * 0.56)),
@@ -149,7 +195,7 @@ def create_card(title, cost, type, ability, atk, image_path):
 
 
 def create_grid(cards):
-    grid = Image.new("RGB", PAGE_SIZE, color=COLORS["grid_background"])
+    grid = Image.new("RGBA", PAGE_SIZE, color=COLORS["grid_background"])
     for i, card in enumerate(cards):
         grid.paste(card, ((i % 3) * CARD_SIZE[0], (i // 3) * CARD_SIZE[1]))
     return grid
@@ -174,7 +220,7 @@ if __name__ == "__main__":
     csv_file = "cards.csv"
     grids = process_csv(csv_file)
     for i, grid in enumerate(grids):
-        grid.save(f"card_grid_{i+1}.png")
+        grid.save(f"card_grid_{i+1}.png", format="PNG")
     print(
         f"Created {len(grids)} grid(s) of cards with dimensions {PAGE_SIZE[0]}x{PAGE_SIZE[1]} pixels."
     )
